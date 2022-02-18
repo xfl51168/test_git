@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xfl.dao.StudentDao">
+<!--
+    select : id,resultType是必写的，paramterType可选.
+    update,delete,insert:只写id。
+
+    #:占位符；$:拼接符
+-->
+
+<!--    多表查询
+1.使用map
+2.使用vo类：value object
+    其属性由我们自己定义。
+-->
+
+    <select id="selectVo" resultType="com.xfl.vo.StudentAndClassroomVo">
+        select
+        s.id sid,
+        s.name sname,
+        s.age sage,
+        s.addr saddr,
+        c.id cid,
+        c.name cname
+        from t_student s
+        join t_classroom c
+        on s.classroomId = c.id
+    </select>
+    <select id="selectTs" resultType="map">
+        select s.name sname,c.name cname
+        from t_student s
+        join t_classroom c
+        on s.classroomId = c.id
+    </select>
+
+<!--    sql片段：sql语句重复，可以使用sql片段来代替-->
+    <sql id="s1">
+    select * from t_student
+    </sql>
+    <select id="selectByIn"  resultType="Student">
+        <include refid="s1"/> where id in
+        <foreach collection="array" item="element" open="(" close=")" separator=",">
+            #{element}
+        </foreach>
+
+    </select>
+    <select id="getByParams" resultType="Student">
+        select * from t_student
+
+        <where>
+            <if test="name!=null and name!=''">
+                name like '%' #{name} '%'
+            </if>
+            <if test="addr!=null and addr!=''">
+                and addr like '%' #{addr} '%'
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="stuMap" type="Student">
+<!--        property:domain中属性；column：数据库表中字段-->
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <result property="age" column="age"></result>
+    </resultMap>
+
+    <select id="selectByMap" resultMap="stuMap">
+        select * from t_student group by name
+    </select>
+
+    <select id="selectAllName" resultType="String">
+        select name from t_student
+    </select>
+    <select id="selectNameById" parameterType="Integer" resultType="String">
+        select name from t_student where id=#{id}
+    </select>
+
+    <select id="getLike" parameterType="String" resultType="Student">
+        select * from t_student where name like '%' #{value} '%'
+    </select>
+
+    <select id="getById" parameterType="Integer" resultType="com.xfl.domain.Student">
+        select * from t_student where id = #{id}
+    </select>
+
+<!--    多条记录resultType就用集合中 泛型-->
+    <select id="getAll" resultType="Student">
+        select * from t_student
+    </select>
+
+<!--    mybatis默认手动提交事务 -->
+    <insert id="addStudent" parameterType="com.xfl.domain.Student">
+        insert into t_student(id,name,age) values(#{id},#{name},#{age})
+    </insert>
+
+    <update id="updateById">
+        update t_student set name=#{name},age=#{age} where id=#{id}
+    </update>
+
+    <delete id="delById" >
+        delete from t_student where id=#{id}
+    </delete>
+</mapper>
